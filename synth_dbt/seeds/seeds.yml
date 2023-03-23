@@ -1,0 +1,30 @@
+version: 2
+
+seeds:
+  - name: stg_seed__users
+    description: "User data from test seed CSV"
+    columns:
+      - name: USER_ID
+        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: CREATED_AT
+        description: "Timestamp for the created date of the user, imported as a string initially with UTC desgination with Z suffix"
+      - name: SEGMENT
+        description: "Designation for customer type, eg. Personal, Enterprise"
+      - name: IS_INTERNAL
+        description: "Boolean designation for Synthesia staff member accounts"
+
+  - name: stg_seed__pagesviews
+    description: "Pageview data from test seed CSV"
+    columns:
+      - name: USER_ID
+        description: "32-char UUIDs. Primary Key."
+        tests:
+          - unique
+          - not_null
+      - name: RECEIVED_AT
+        description: "Timestamp of a user's page view. Not Designated UTC with trailing, confirmed UTC with Gullaume BC."
+      - name: NAME
+        description: "Location of page view. May contain corrupted + partial page names for cleaning/mapping"
