@@ -17,11 +17,19 @@ rename_convert_dates AS (
         u.is_internal
     FROM
         users u
+),
+quarantine_rows AS (
+    SELECT
+        *
+    FROM
+        rename_convert_dates rcd
     WHERE
-        u.user_id IS NOT NULL
-        AND u.created_at IS NOT NULL
+        rcd.user_id_base64 IS NULL
+        OR rcd.created_at_utc IS NULL
+        OR rcd.created_at_date_utc IS NULL
+        OR rcd.is_internal IS NULL
 )
 SELECT
     *
 FROM
-    rename_convert_dates
+    quarantine_rows

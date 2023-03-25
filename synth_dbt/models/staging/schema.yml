@@ -2,4 +2,99 @@ version: 2
 
 models:
   - name: stg_seed__users
+    description: | 
+      Staged User data from test seed CSV. No duplicate IDs found
+      ## Known state from sources:
+      ### users.csv:
+        - user_id: No duplicate IDs found
+        - created_at: 785 Nulls - Quarantined and tested in staging
+
+    columns:
+      - name: USER_ID_BASE64
+        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: CREATED_AT_UTC
+        description: "Timestamp for the created date of the user. UTC Timezone"
+        tests: 
+          - not_null
+      - name: CREATED_AT_DATE_UTC
+        description: "YYYY-MM-DD date part from CREATED_AT_UTC Timestamp for the created date of the user, imported as a string initially with UTC desgination with Z suffix"
+      - name: SEGMENT
+        description: "Designation for customer type. Confirmed only values: PERSONAL, ENTERPRISE"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ENTERPRISE','PERSONAL']
+              config:
+                severity: warn
+      - name: IS_INTERNAL
+        description: "Boolean designation for Synthesia staff member accounts. Confirmed only true + false values"
+        tests:
+          - not_null
+
   - name: stg_seed__pagesviews
+    description: | 
+      Pageview data from test seed CSV. 1748 Non-null duplicate rows found
+      ## Known state from sources:
+      ### pagesviews.csv:
+        - user_id: 10639 with NULL ids. 12615 rows with malformed GUIDs. Quarantined and tested in staging.
+        - name: <10 rows with obvious malformed paths incl. '/sin-in', '/MY.ACOOUN', '/vidmeos'. These rows are preserved in staging: If we can track a user has visited the site, then they are in someway active and at this high-level we should not be excluding this as activity. 
+        In adding extra levels of detail as we dive into the data, we would need take a position on how we resolve these malformed paths
+        - Duplicate Rows: 1748 rows found with duplicate ID, Timestamp and Name. Deduped in staging, quarantined, and tested.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - USER_ID_GUID
+            - RECEIVED_AT_UTC
+            - PAGE_LOCATION
+    columns:
+      - name: USER_ID_GUID
+        description: "32-char UUIDs. Primary Key, some USER_IDs don't fall into that format"
+        tests:
+          - not_null
+      - name: USER_ID_BASE64
+        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+        tests:
+          - not_null
+      - name: RECEIVED_AT_UTC
+        description: "Timestamp of a user's page view. Not explicitly designated UTC with trailing Z, confirmed UTC with Gullaume BC."
+        tests:
+          - not_null
+      - name: RECEIVED_AT_DATE_UTC
+        description: "YYYY-MM-DD date part from RECEIVED_AT_UTC Timestamp"
+        tests:
+          - not_null
+      - name: PAGE_LOCATION
+        description: "Location of page view. May contain corrupted + partial page names"
+
+  - name: quarantine_seed__users
+    description: "Rows excluded from staging model from seed users.csv."
+    tags: "quarantine"
+    columns:
+      - name: USER_ID_BASE64
+        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+      - name: CREATED_AT_UTC
+        description: "Timestamp for the created date of the user. UTC Timezone"
+      - name: CREATED_AT_DATE_UTC
+        description: "YYYY-MM-DD date part from CREATED_AT_UTC Timestamp for the created date of the user, imported as a string initially with UTC desgination with Z suffix"
+      - name: SEGMENT
+        description: "Designation for customer type. Confirmed only values: PERSONAL, ENTERPRISE"
+      - name: IS_INTERNAL
+        description: "Boolean designation for Synthesia staff member accounts. Confirmed only true + false values"
+
+  - name: quarantine_seed__pagesviews
+    description: "Rows excluded from staging model from seed pagseviews.csv. Issues include Null values, and malformed GUIDs that do not encode to Base64"
+    tags: "quarantine"
+    columns:
+      - name: USER_ID_GUID
+        description: "32-char UUIDs. Primary Key, some USER_IDs don't fall into that format"
+      - name: USER_ID_BASE64
+        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+      - name: RECEIVED_AT_UTC
+        description: "Timestamp of a user's page view. Not explicitly designated UTC with trailing Z, confirmed UTC with Gullaume BC."
+      - name: RECEIVED_AT_DATE_UTC
+        description: "YYYY-MM-DD date part from RECEIVED_AT_UTC Timestamp"
+      - name: PAGE_LOCATION
+        description: "Location of page view. May contain corrupted + partial page names"

@@ -33,6 +33,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 seeds:
   synth_dbt:
+    +tags: "seed"
     users:
       +column_types:
         CREATED_AT: string
@@ -41,4 +42,14 @@ models:
   synth_dbt:
     # Config indicated by + and applies to all files under models/example/
     staging:
+      +tags: "staging"
       +materialized: view
+    marts:
+      +tags: "mart"
+      +materialized: view
+    intermediate:
+      +tags: "intermediate"
+      +materialized: view
+    reporting:
+      +tags: "reporting"
+      +materialized: table

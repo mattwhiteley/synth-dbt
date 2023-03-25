@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: weekly_cohort_activity
+  
+exposures:
+- name: weekly_cohort_activity
+  tags: ['dashboard']
+  label: Weekly Cohort Activity
+  type: dashboard
+  maturity: high
+  url: https://lookerstudio.google.com/reporting/03011fa7-4379-4da6-acfb-950927948889
+  description: Simple Cohort chart for user activity for seed PagesViews data
+
+  depends_on:
+    - ref('weekly_cohort_activity')
+  
+  owner:
+    name: Matt Whiteley
+    email: thatmattwhiteley@gmail.com

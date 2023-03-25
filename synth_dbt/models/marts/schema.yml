@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: fact__pageviews_users
+  - name: dim__users

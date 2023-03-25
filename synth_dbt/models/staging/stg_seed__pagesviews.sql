@@ -1,17 +1,43 @@
-WITH pages_views as (
-    SELECT * from {{ref ('pages_views')}}
-),
-
-rename_decodeGUID AS (
+WITH pages_views AS (
     SELECT
-        pv.USER_ID as USER_ID_GUID,
-        --Convert GUIDs to the shorter Base64 format, to match UserIDs
-        to_base64(SAFE_CAST(REPLACE(USER_ID,"-","") AS BYTES FORMAT 'HEX')) as USER_ID_BASE64,
+        *
+    FROM
+        {{ ref ('pages_views') }}
+),
+rename_decodeGUID_dedupe AS (
+    SELECT
+        pv.user_id AS user_id_guid,
+        --Convert GUIDs to the shorter Base64 format, to match users.UserIDs - Bad IDs will resolve to Nulls
+        to_base64(
+            safe_cast(REPLACE(pv.user_id, "-", "") AS bytes format 'HEX')
+        ) AS user_id_base64,
         -- Rename timestamp for clarity on timezone, separate date for day-only calcs
-        pv.RECEIVED_AT as RECEIVED_AT_UTC,
-        SAFE_CAST(RECEIVED_AT AS DATE) as RECEIVED_AT_DATE_UTC,
-        pv.NAME as PAGE_LOCATION
-    FROM pages_views pv
+        pv.received_at AS received_at_utc,
+        safe_cast(
+            pv.received_at AS DATE
+        ) AS received_at_date_utc,
+        pv.name AS page_location,
+        COUNT(*) as row_count --row count for group & dedupe
+    FROM
+        pages_views pv
+    GROUP BY 1,2,3,4,5
+    HAVING COUNT(*) = 1 --removes duplicate rows
+),
+remove_NULL_rows AS (
+    SELECT
+        user_id_guid,
+        user_id_base64,
+        received_at_utc,
+        received_at_date_utc,
+        page_location
+    FROM
+        rename_decodeGUID_dedupe rd
+    WHERE
+        rd.user_id_guid IS NOT NULL
+        AND rd.user_id_base64 IS NOT NULL
+        AND rd.page_location IS NOT NULL 
 )
-
-SELECT * FROM rename_decodeGUID
+SELECT
+    *
+FROM
+    remove_NULL_rows

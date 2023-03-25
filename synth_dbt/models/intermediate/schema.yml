@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: int_cohorts__new_users
+  - name: int_cohorts__user_activity
