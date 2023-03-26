@@ -1,5 +1,53 @@
 version: 2
 
 models:
-  - name: int_cohorts__new_users
   - name: int_cohorts__user_activity
+    description: "Weekly cohort activity for retention analysis"
+    columns:
+      - name: user_id_base64
+        description: "First day of ISO week, during which the users in this cohort were created"
+        tests:
+          - not_null
+      - name: user_segment
+        description: "Designation for customer type. Confirmed only values: ENTERPRISE,PERSONAL"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ENTERPRISE','PERSONAL']
+              config:
+                severity: warn
+      - name: active_week
+        description: "First day of ISO week, during which the user activity occurred"
+        tests:
+          - not_null
+      - name: cohort_week
+        description: "First day of ISO week, during which the users in this cohort were created"
+        tests:
+          - not_null
+  
+  - name: int_cohorts__new_users
+    description: "Counts of New Users, by Cohort Week of user_created_at date"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+        combination_of_columns:
+          - cohort_week
+          - user_segment
+    columns:
+      - name: cohort_week
+        description: "First day of ISO week, during which the users in this cohort were created"
+        tests:
+          - not_null
+      - name: user_segment
+        description: "Designation for customer type. Confirmed only values: ENTERPRISE,PERSONAL"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ENTERPRISE','PERSONAL']
+              config:
+                severity: warn
+      - name: new_users
+        description: "Total count of users created during this cohort_week."
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0

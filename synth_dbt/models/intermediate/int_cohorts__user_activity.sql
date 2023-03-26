@@ -8,10 +8,7 @@ user_activity AS (
   SELECT
     fpvu.user_id_base64,
     fpvu.user_segment,
-    DATE_TRUNC(
-      fpvu.user_created_at_date_utc,
-      isoweek
-    ) AS cohort_week,
+    fpvu.cohort_week,
     DATE_TRUNC(
       fpvu.pageview_received_at_date_utc,
       isoweek

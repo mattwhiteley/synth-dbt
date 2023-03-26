@@ -2,4 +2,93 @@ version: 2
 
 models:
   - name: fact__pageviews_users
+    description: Enriched pageview data with user-level data added.
+    columns:
+      - name: user_id_base64
+        description: "Base64 encoded UUID, with trailing '==' suffix."
+        tests:
+      - name: pageview_received_at_utc
+        description: "Timestamp of a user's page view. UTC"
+        tests:
+      - name: pageview_received_at_date_utc
+        description: "YYYY-MM-DD Date part of timestamp of a user's page view. UTC"
+        tests:
+      - name: page_location
+        description: "Page path viewed by user. Includes malformed paths at this level."
+        tests:
+      - name: user_created_at_utc
+        description: "Timestamp for the created date of the user. UTC Timezone"
+        tests:
+      - name: user_created_at_date_utc
+        description: "YYYY-MM-DD date part from CREATED_AT_UTC Timestamp for the created date of the user."
+        tests:
+      - name: user_segment
+        description: "Designation for customer type. Confirmed only values: ENTERPRISE,PERSONAL"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ENTERPRISE','PERSONAL']
+              config:
+                severity: warn
+      - name: user_is_internal
+        description: "Boolean designation for Synthesia staff member accounts. Confirmed only true + false values"
+        tests:
+          - not_null
+      - name: cohort_week
+        description: "First day of ISO week, during which the users in this cohort were created"
+        tests:
+          - not_null
+
   - name: dim__users
+    description: Core user table. Internal users are removed, and Cohort Week designation added.
+    columns:
+      - name: user_id_base64
+        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: created_at_utc
+        description: "Timestamp for the created date of the user. UTC Timezone"
+        tests: 
+          - not_null
+      - name: created_at_date
+        description: "YYYY-MM-DD date part from CREATED_AT_UTC Timestamp for the created date of the user, imported as a string initially with UTC desgination with Z suffix"
+        tests:
+          - not_null
+      - name: segment
+        description: "Designation for customer type. Confirmed only values: ENTERPRISE,PERSONAL"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ENTERPRISE','PERSONAL']
+              config:
+                severity: warn
+      - name: is_internal
+        description: "Boolean designation for Synthesia staff member accounts. Should only be FALSE"
+        tests:
+          - not_null
+
+  - name: dim__internal_users
+    description: Holding table for Internal Users, so data is available for future use if requiured.
+    columns:
+      - name: user_id_base64
+        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: created_at_utc
+        description: "Timestamp for the created date of the user. UTC Timezone"
+        tests: 
+          - not_null
+      - name: created_at_date
+        description: "YYYY-MM-DD date part from CREATED_AT_UTC Timestamp for the created date of the user, imported as a string initially with UTC desgination with Z suffix"
+        tests:
+          - not_null
+      - name: segment
+        description: "Designation for customer type. Confirmed only values: ENTERPRISE,PERSONAL"
+        tests:
+          - not_null
+      - name: is_internal
+        description: "Boolean designation for Synthesia staff member accounts. Should only be TRUE in this table"
+        tests:
+          - not_null

@@ -17,7 +17,7 @@ seeds:
     description: "Pageview data from test seed CSV"
     columns:
       - name: USER_ID
-        description: "32-char GUIDs. Primary Key, some USER_IDs don't fall into that format"
+        description: "32-char GUIDs. Note: Some USER_IDs don't fall into that format"
       - name: RECEIVED_AT
         description: "Timestamp of a user's page view. Not Designated UTC with trailing, confirmed UTC with Gullaume BC."
       - name: NAME
