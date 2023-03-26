@@ -3,36 +3,39 @@ version: 2
 models:
   - name: stg_seed__users
     description: | 
-      Staged User data from test seed CSV. No duplicate IDs found
+      Staged User data from test seed CSV. No duplicate IDs found.
       ## Known state from sources:
       ### users.csv:
         - user_id: No duplicate IDs found
         - created_at: 785 Nulls - Quarantined and tested in staging
-
     columns:
-      - name: USER_ID_BASE64
+      - name: user_id_base64
         description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
         tests:
           - unique
           - not_null
-      - name: CREATED_AT_UTC
+      - name: created_at_utc
         description: "Timestamp for the created date of the user. UTC Timezone"
         tests: 
           - not_null
-      - name: CREATED_AT_DATE_UTC
+      - name: created_at_date_utc
         description: "YYYY-MM-DD date part from CREATED_AT_UTC Timestamp for the created date of the user, imported as a string initially with UTC desgination with Z suffix"
-      - name: SEGMENT
-        description: "Designation for customer type. Confirmed only values: PERSONAL, ENTERPRISE"
+      - name: segment
+        description: "Designation for customer type. Confirmed only values: ENTERPRISE,PERSONAL"
         tests:
           - not_null
           - accepted_values:
               values: ['ENTERPRISE','PERSONAL']
               config:
                 severity: warn
-      - name: IS_INTERNAL
+      - name: is_internal
         description: "Boolean designation for Synthesia staff member accounts. Confirmed only true + false values"
         tests:
           - not_null
+          - accepted_values:
+              values: [true,false]
+              quote: false
+
 
   - name: stg_seed__pagesviews
     description: | 
@@ -46,55 +49,57 @@ models:
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
-            - USER_ID_GUID
-            - RECEIVED_AT_UTC
-            - PAGE_LOCATION
+            - user_id_guid
+            - received_at_utc
+            - page_location
     columns:
-      - name: USER_ID_GUID
-        description: "32-char UUIDs. Primary Key, some USER_IDs don't fall into that format"
+      - name: user_id_guid
+        description: "32-char UUIDs."
         tests:
           - not_null
-      - name: USER_ID_BASE64
-        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
+      - name: user_id_base64
+        description: "Base64 encoded UUID, with trailing '==' suffix."
         tests:
           - not_null
-      - name: RECEIVED_AT_UTC
+      - name: received_at_utc
         description: "Timestamp of a user's page view. Not explicitly designated UTC with trailing Z, confirmed UTC with Gullaume BC."
         tests:
           - not_null
-      - name: RECEIVED_AT_DATE_UTC
+      - name: received_at_date_utc
         description: "YYYY-MM-DD date part from RECEIVED_AT_UTC Timestamp"
         tests:
           - not_null
-      - name: PAGE_LOCATION
+      - name: page_location
         description: "Location of page view. May contain corrupted + partial page names"
+        tests:
+          - not_null
 
   - name: quarantine_seed__users
-    description: "Rows excluded from staging model from seed users.csv."
+    description: "Rows excluded from staging model from seed users.csv for test condition failures. Quarantined for inspection."
     tags: "quarantine"
     columns:
-      - name: USER_ID_BASE64
+      - name: user_id_base64
         description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
-      - name: CREATED_AT_UTC
+      - name: created_at_utc
         description: "Timestamp for the created date of the user. UTC Timezone"
-      - name: CREATED_AT_DATE_UTC
+      - name: created_at_date_utc
         description: "YYYY-MM-DD date part from CREATED_AT_UTC Timestamp for the created date of the user, imported as a string initially with UTC desgination with Z suffix"
-      - name: SEGMENT
+      - name: segment
         description: "Designation for customer type. Confirmed only values: PERSONAL, ENTERPRISE"
-      - name: IS_INTERNAL
+      - name: is_internal
         description: "Boolean designation for Synthesia staff member accounts. Confirmed only true + false values"
 
   - name: quarantine_seed__pagesviews
-    description: "Rows excluded from staging model from seed pagseviews.csv. Issues include Null values, and malformed GUIDs that do not encode to Base64"
+    description: "Rows excluded from staging model from seed pagseviews.csv, quarantined for inspection. Issues include Null values, and malformed GUIDs that do not encode to Base64"
     tags: "quarantine"
     columns:
-      - name: USER_ID_GUID
-        description: "32-char UUIDs. Primary Key, some USER_IDs don't fall into that format"
-      - name: USER_ID_BASE64
-        description: "Base64 encoded UUID, with trailing '==' suffix. Primary key"
-      - name: RECEIVED_AT_UTC
+      - name: user_id_guid
+        description: "32-char UUIDs. Some user_ids don't fall into that format"
+      - name: user_id_base64
+        description: "Base64 encoded UUID, with trailing '==' suffix. Null if GUID does not follow correct UUID4 format"
+      - name: received_at
         description: "Timestamp of a user's page view. Not explicitly designated UTC with trailing Z, confirmed UTC with Gullaume BC."
-      - name: RECEIVED_AT_DATE_UTC
-        description: "YYYY-MM-DD date part from RECEIVED_AT_UTC Timestamp"
-      - name: PAGE_LOCATION
+      - name: name
         description: "Location of page view. May contain corrupted + partial page names"
+      - name: row_count
+        description: "Count of duplicate rows found, across [user_id_guid, received_at, name]"

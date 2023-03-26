@@ -20,10 +20,10 @@ join_transform AS (
         u.created_at_date_utc AS user_created_at_date_utc,
         u.segment AS user_segment,
         u.is_internal AS user_is_internal,
-        u.cohort_week --TODO:Switch to Inner Join to drop Users without Events and Events without Users?
+        u.cohort_week
     FROM
         stg_seed__pagesviews AS pv
-        LEFT JOIN dim__users AS u
+        INNER JOIN dim__users AS u  -- only join events where IDs exist in both tables
         ON pv.user_id_base64 = u.user_id_base64
     WHERE
         u.user_id_base64 IS NOT NULL

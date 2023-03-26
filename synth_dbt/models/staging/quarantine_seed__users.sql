@@ -28,6 +28,7 @@ quarantine_rows AS (
         OR rcd.created_at_utc IS NULL
         OR rcd.created_at_date_utc IS NULL
         OR rcd.is_internal IS NULL
+        OR rcd.is_internal NOT IN (TRUE, FALSE)
 )
 SELECT
     *

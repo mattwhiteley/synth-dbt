@@ -18,7 +18,7 @@ enriched_only_internal_users AS (
     FROM
         stg_seed__users su
     WHERE
-        su.is_internal = TRUE
+        su.is_internal = TRUE --include only staff accounts
 )
 SELECT
     *

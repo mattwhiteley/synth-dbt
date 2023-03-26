@@ -2,14 +2,74 @@ version: 2
 
 models:
   - name: weekly_cohort_activity
-  
+    description: "Weekly cohort activity metrics for retention analysis"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - cohort_week
+            - active_week
+            - user_segment
+    columns:
+      - name: cohort_week
+        description: "First day of ISO week, during which the users in this cohort were created"
+        tests:
+          - not_null
+      - name: active_week
+        description: "First day of ISO week, during which the user activity occurred"
+        tests:
+          - not_null
+      - name: cohort_period
+        description: "The lifetime period that this active_week represents for the cohort. [active_week] - [cohort_week]. 0 indicating the week the users joined"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: user_segment
+        description: "Designation for customer type. Confirmed only values: ENTERPRISE,PERSONAL"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ENTERPRISE','PERSONAL']
+              config:
+                severity: warn
+      - name: weekly_active_users
+        description: "Count of distinct users from the cohort showing activity in this active_week. Numerator for Cohort Retention %"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: cohort_size
+      - name: cohort_size
+        description: "Total count of users created during this cohort_week. Denominator for Cohort Retention %"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+metrics:
+  - name: weekly_active_users
+    description: "Distinct count of user_id_base64 across cohort_week, segment, by week of the pageview"
+    label: Weekly Active Cohort Users
+    model: ref('fact__pageviews_users')
+    calculation_method: count_distinct
+    expression: user_id_base64
+    timestamp: pageview_received_at_utc
+    time_grains: [week]
+    dimensions:
+      - cohort_week
+      - user_segment
+    config:
+      enabled: true
+      treat_null_values_as_zero: true
+    meta: {team: Product}
+
 exposures:
 - name: weekly_cohort_activity
   tags: ['dashboard']
   label: Weekly Cohort Activity
   type: dashboard
   maturity: high
-  url: https://lookerstudio.google.com/reporting/03011fa7-4379-4da6-acfb-950927948889
+  url: https://lookerstudio.google.com/s/jKtB1S-idqI
   description: Simple Cohort chart for user activity for seed PagesViews data
 
   depends_on:
