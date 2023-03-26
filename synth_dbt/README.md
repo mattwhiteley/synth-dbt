@@ -1,7 +1,18 @@
-Welcome to your new dbt project!
 
-### Using the starter project
+## Setup:
+Ensure you run `dbt deps` to install `dbt-utils` and `metrics` packages which are both required in this project
 
+## BigQuery:
+This project was developed on BigQuery, so ensure the correct adapter is installed: `pip3 install dbt-bigquery`
+The SQL is fairly straightforward within these models, but YMMV if you attempt to run these models on Postgres or MySQL DBs.
+
+## Docs:
+Generate and serve the docs to view the DAG, and definitions across the whole project, including metrics and exposures
+### `dbt docs generate`
+### `dbt docs serve`
+
+
+### Using this project
 Try running the following commands:
 - dbt run
 - dbt test

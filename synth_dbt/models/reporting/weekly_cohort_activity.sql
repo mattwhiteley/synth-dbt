@@ -4,48 +4,47 @@ WITH cohort_new_users AS (
     FROM
         {{ ref('int_cohorts__new_users') }}
 ),
-cohort_weekly_activity AS (
+
+weekly_metrics AS(
     SELECT
         *
-    FROM
-        {{ ref('int_cohorts__user_activity') }}
+    from 
+        {{ metrics.calculate(
+            metric('weekly_active_users'),
+            grain='week',
+            dimensions=['cohort_week', 'user_segment']
+        )
+    }}
 ),
-/*
-all_cohort_weeks as(
-    SELECT *
-    from sequence
-)
-all_activity_weeks
-*/
---TODO: ADD SEQUENCE OF WEEKS TO CLEAR ANY GAPS
-aggregated_users_activity AS (
+
+aggregated_users_activity_metrics AS (
     SELECT
-        wa.cohort_week,
-        wa.active_week,
+        wm.cohort_week,
+        wm.date_week as active_week,
         date_diff(
-            wa.active_week,
-            wa.cohort_week,
+            wm.date_week,
+            wm.cohort_week,
             week
         ) AS cohort_period,
-        wa.user_segment,
-        COUNT(
-            wa.user_id_base64
-        ) AS active_users,
+        wm.user_segment,
+        wm.weekly_active_users,
         MAX (
             nu.new_users
         ) AS cohort_size
     FROM
-        cohort_weekly_activity wa
+        weekly_metrics wm
         LEFT JOIN cohort_new_users nu
-        ON wa.cohort_week = nu.cohort_week
-        AND wa.user_segment = nu.segment
+        ON wm.cohort_week = nu.cohort_week
+        AND wm.user_segment = nu.user_segment
     GROUP BY
         1,
         2,
         3,
-        4
+        4,
+        5
 )
+
 SELECT
     *
 FROM
-    aggregated_users_activity
+    aggregated_users_activity_metrics

@@ -7,7 +7,7 @@ WITH dim__users AS (
 new_users AS (
     SELECT
         u.cohort_week,
-        u.segment,
+        u.segment as user_segment,
         COUNT(
             DISTINCT u.user_id_base64
         ) AS new_users
